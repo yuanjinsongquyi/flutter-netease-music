@@ -1,12 +1,9 @@
 import 'dart:async';
 
 import 'package:dart_vlc/dart_vlc.dart';
-import 'package:flutter/foundation.dart';
-import 'package:quiet/extension.dart';
 import 'package:quiet/repository.dart';
 
-import 'track_list.dart';
-import 'tracks_player.dart';
+import 'tracks_player_local.dart';
 
 extension _SecondsToDuration on double {
   Duration toDuration() {
@@ -14,7 +11,7 @@ extension _SecondsToDuration on double {
   }
 }
 
-class TracksPlayerImplVlc extends TracksPlayer {
+class TracksPlayerImplVlc extends TracksPlayerLocal {
   TracksPlayerImplVlc() {
     _player.playbackStream.listen((event) {
       if (event.isCompleted) {
@@ -30,62 +27,11 @@ class TracksPlayerImplVlc extends TracksPlayer {
     commandlineArguments: ['--no-video'],
   );
 
-  var _trackList = const TrackList.empty();
-
-  Track? _current;
-
   @override
   Duration? get bufferedPosition => _player.bufferingProgress.toDuration();
 
   @override
-  Track? get current => _current;
-
-  @override
   Duration? get duration => _player.position.duration;
-
-  @override
-  Future<Track?> getNextTrack() async {
-    final index = _trackList.tracks.cast().indexOf(current);
-    if (index == -1) {
-      return _trackList.tracks.firstOrNull;
-    }
-    final nextIndex = index + 1;
-    if (nextIndex >= _trackList.tracks.length) {
-      return null;
-    }
-    return _trackList.tracks[nextIndex];
-  }
-
-  @override
-  Future<Track?> getPreviousTrack() async {
-    final index = _trackList.tracks.cast().indexOf(current);
-    if (index == -1) {
-      return _trackList.tracks.lastOrNull;
-    }
-    final previousIndex = index - 1;
-    if (previousIndex < 0) {
-      return null;
-    }
-    return _trackList.tracks[previousIndex];
-  }
-
-  @override
-  Future<void> insertToNext(Track track) async {
-    final index = _trackList.tracks.cast().indexOf(current);
-    if (index == -1) {
-      return;
-    }
-    final nextIndex = index + 1;
-    if (nextIndex >= _trackList.tracks.length) {
-      _trackList.tracks.add(track);
-    } else {
-      final next = _trackList.tracks[nextIndex];
-      if (next != track) {
-        _trackList.tracks.insert(nextIndex, track);
-      }
-    }
-    notifyPlayStateChanged();
-  }
 
   @override
   bool get isBuffering => false;
@@ -104,22 +50,10 @@ class TracksPlayerImplVlc extends TracksPlayer {
   }
 
   @override
-  Future<void> playFromMediaId(int trackId) async {
-    stop();
-    final item = _trackList.tracks.firstWhereOrNull((t) => t.id == trackId);
-    if (item != null) {
-      _playTrack(item);
-    }
-  }
-
-  @override
   double get playbackSpeed => _player.general.rate;
 
   @override
   Duration? get position => _player.position.position;
-
-  @override
-  RepeatMode get repeatMode => RepeatMode.all;
 
   @override
   Future<void> seekTo(Duration position) async {
@@ -132,41 +66,9 @@ class TracksPlayerImplVlc extends TracksPlayer {
   }
 
   @override
-  Future<void> setRepeatMode(RepeatMode repeatMode) async {
-    // TODO
-  }
-
-  @override
-  void setTrackList(TrackList trackList) {
-    bool needStop = trackList.id != _trackList.id;
-    if (needStop) {
-      stop();
-      _current = null;
-    }
-    _trackList = trackList;
-    notifyPlayStateChanged();
-  }
-
-  @override
   Future<void> setVolume(double volume) async {
     _player.setVolume(volume);
     notifyPlayStateChanged();
-  }
-
-  @override
-  Future<void> skipToNext() async {
-    final next = await getNextTrack();
-    if (next != null) {
-      _playTrack(next);
-    }
-  }
-
-  @override
-  Future<void> skipToPrevious() async {
-    final previous = await getPreviousTrack();
-    if (previous != null) {
-      _playTrack(previous);
-    }
   }
 
   @override
@@ -175,25 +77,10 @@ class TracksPlayerImplVlc extends TracksPlayer {
   }
 
   @override
-  TrackList get trackList => _trackList;
-
-  @override
   double get volume => _player.general.volume;
 
-  void _playTrack(Track track) {
-    scheduleMicrotask(() async {
-      final url = await neteaseRepository!.getPlayUrl(track.id);
-      if (url.isError) {
-        debugPrint('Failed to get play url: ${url.asError!.error}');
-        return;
-      }
-      if (_current != track) {
-        // skip play. since the track is changed.
-        return;
-      }
-      _player.open(Media.network(url.asValue!.value), autoStart: true);
-    });
-    _current = track;
-    notifyPlayStateChanged();
+  @override
+  void doPlayItem(Track track, String url) {
+    _player.open(Media.network(url), autoStart: true);
   }
 }

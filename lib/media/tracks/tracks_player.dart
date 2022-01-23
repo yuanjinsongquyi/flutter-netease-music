@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../repository/data/track.dart';
 import 'track_list.dart';
+import 'tracks_player_impl_lychee.dart';
 import 'tracks_player_impl_mobile.dart';
 import 'tracks_player_impl_vlc.dart';
 
@@ -60,7 +61,10 @@ abstract class TracksPlayer extends StateNotifier<TracksPlayerState> {
         ));
 
   factory TracksPlayer.platform() {
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    if (Platform.isMacOS) {
+      return TracksPlayerImplLychee();
+    }
+    if (Platform.isWindows || Platform.isLinux) {
       return TracksPlayerImplVlc();
     }
     return TracksPlayerImplMobile();
