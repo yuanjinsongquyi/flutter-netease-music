@@ -1,5 +1,6 @@
 import 'package:async/async.dart';
 import 'package:flutter/material.dart';
+import 'package:quiet/model/listen_all/artist_alum.dart';
 
 import '../../component/netease/netease_loader.dart';
 import '../../material/tiles.dart';
@@ -16,7 +17,7 @@ class CollectionAlbums extends StatelessWidget {
           children: data
               .cast<Map>()
               .map((album) =>
-                  AlbumTile(album: album, subtitle: _getAlbumSubtitle))
+                  AlbumTile(album: ArtistAlum(), subtitle: _getAlbumSubtitle))
               .toList(),
         );
       },

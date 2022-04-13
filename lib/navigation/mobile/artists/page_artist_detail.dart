@@ -1,14 +1,21 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loader/loader.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:quiet/extension.dart';
+import 'package:quiet/model/listen_all/artist_alum.dart';
+import 'package:quiet/model/listen_all/safe_convert.dart';
 import 'package:quiet/navigation/common/playlist/music_list.dart';
 import 'package:quiet/navigation/mobile/playlists/dialog_selector.dart';
 import 'package:quiet/navigation/mobile/playlists/page_playlist_detail_selection.dart';
+import 'package:quiet/navigation/mobile/widgets/track_title.dart';
 import 'package:quiet/part/part.dart';
 import 'package:quiet/repository.dart';
-
+import 'package:netease_api/src/listen_all/api/kuwo/kuwo.dart';
 import '../../../material/tiles.dart';
+import '../../../providers/player_provider.dart';
 import 'artist_header.dart';
 
 ///歌手详情页
@@ -56,13 +63,10 @@ class ArtistDetailPage extends StatelessWidget {
                         artistId: artistId,
                       ),
                       _PageAlbums(artistId: artistId),
-                      _PageMVs(
-                        artistId: artistId,
-                        mvCount: result.artist.mvSize,
-                      ),
+                      Container(),
                       _PageArtistIntroduction(
                         artistId: artistId,
-                        artistName: result.artist.name,
+                        artist: result.artist,
                       ),
                     ],
                   ),
@@ -135,21 +139,24 @@ class _PageHotSongsState extends State<_PageHotSongs>
     if (widget.musicList.isEmpty) {
       return const Center(child: Text("该歌手无热门曲目"));
     }
-    return MusicTileConfiguration(
-      musics: widget.musicList,
-      token: 'artist_${widget.artistId}_hot',
-      leadingBuilder: MusicTileConfiguration.indexedLeadingBuilder,
-      trailingBuilder: MusicTileConfiguration.defaultTrailingBuilder,
-      onMusicTap: MusicTileConfiguration.defaultOnTap,
-      child: ListView.builder(
-          itemCount: widget.musicList.length + 1,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return _buildHeader(context);
-            } else {
-              return MusicTile(widget.musicList[index - 1]);
-            }
-          }),
+    return _PlayList(
+      MusicTileConfiguration(
+        musics: widget.musicList,
+        token: 'artist_${widget.artistId}_hot',
+        leadingBuilder: MusicTileConfiguration.indexedLeadingBuilder,
+        trailingBuilder: MusicTileConfiguration.defaultTrailingBuilder,
+        onMusicTap: MusicTileConfiguration.defaultOnTap,
+        child: ListView.builder(
+            itemCount: widget.musicList.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return _buildHeader(context);
+              } else {
+                return TrackTile(index: index, track: widget.musicList[index-1],);
+              }
+            }),
+      ),
+      widget.musicList,
     );
   }
 
@@ -167,16 +174,24 @@ class _PageAlbums extends StatefulWidget {
 
 class _PageAlbumsState extends State<_PageAlbums>
     with AutomaticKeepAliveClientMixin {
-  Future<Result<List<Map>>> _delegate(offset) async {
-    final result =
-        await neteaseRepository!.artistAlbums(widget.artistId, offset: offset);
-    return ValueResult((result.asValue!.value["hotAlbums"] as List).cast());
+  Future<Result<List<ArtistAlum>>> _delegate(offset) async {
+    // final result =
+    //     await neteaseRepository!.artistAlbums(widget.artistId, offset: offset);
+    // return ValueResult((result.asValue!.value["hotAlbums"] as List).cast());
+    final value = await KuWo.artistAlbum(artistId: widget.artistId.toString(),page: offset~/10,size: 10);
+    Map<String, dynamic>? result  = json.decode(json.encode(value.data));
+    Map<String, dynamic>? alum;
+    if (result!=null&&result.containsKey("data")){
+      alum = result["data"];
+    }
+    List<ArtistAlum> list = asList(alum, "albumList").map((e) => ArtistAlum.fromJson(e)).toList();
+    return ValueResult(list);
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return AutoLoadMoreList<Map>(
+    return AutoLoadMoreList<ArtistAlum>(
       loadMore: _delegate,
       builder: (context, album) {
         return AlbumTile(album: album);
@@ -264,11 +279,11 @@ class _PageMVsState extends State<_PageMVs> with AutomaticKeepAliveClientMixin {
 
 class _PageArtistIntroduction extends StatefulWidget {
   const _PageArtistIntroduction(
-      {Key? key, required this.artistId, required this.artistName})
+      {Key? key, required this.artistId, required this.artist})
       : super(key: key);
   final int artistId;
 
-  final String? artistName;
+  final Artist artist;
 
   @override
   _PageArtistIntroductionState createState() {
@@ -278,17 +293,17 @@ class _PageArtistIntroduction extends StatefulWidget {
 
 class _PageArtistIntroductionState extends State<_PageArtistIntroduction>
     with AutomaticKeepAliveClientMixin {
-  List<Widget> _buildIntroduction(BuildContext context, Map result) {
+  List<Widget> _buildIntroduction(BuildContext context, Artist artist) {
     final Widget title = Padding(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-        child: Text("${widget.artistName}简介",
+        child: Text("${widget.artist.name}简介",
             style: const TextStyle(
                 fontSize: 15, fontWeight: FontWeight.bold, shadows: [])));
 
     final Widget briefDesc = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Text(
-        result["briefDesc"],
+        artist.briefDesc,
         style: TextStyle(color: Theme.of(context).textTheme.caption!.color),
       ),
     );
@@ -381,19 +396,28 @@ class _PageArtistIntroductionState extends State<_PageArtistIntroduction>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Loader<Map>(
-      loadTask: () => neteaseRepository!.artistDesc(widget.artistId),
-      builder: (context, result) {
-        final widgets = <Widget>[];
-        widgets.addAll(_buildIntroduction(context, result));
-        widgets.addAll(_buildTopic(context, result));
-        return ListView(
-          children: widgets,
-        );
-      },
+    final widgets = <Widget>[];
+    widgets.addAll(_buildIntroduction(context, widget.artist));
+    return  ListView(
+      children: widgets,
     );
   }
 
   @override
   bool get wantKeepAlive => true;
+}
+
+class _PlayList extends ConsumerWidget {
+  const _PlayList(this.child, this.tracks) : super();
+  final Widget child;
+  final List<Track> tracks;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return TrackTileContainer.simpleList(
+      player: ref.read(playerProvider),
+      tracks: tracks,
+      child: child,
+    );
+  }
 }

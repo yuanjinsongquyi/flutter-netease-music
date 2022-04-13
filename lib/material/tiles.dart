@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:quiet/model/listen_all/artist_alum.dart';
 import 'package:quiet/providers/navigator_provider.dart';
 import 'package:quiet/repository/cached_image.dart';
 
@@ -11,23 +12,22 @@ class AlbumTile extends ConsumerWidget {
       : super(key: key);
 
   ///netease album json object
-  final Map album;
+  final ArtistAlum album;
 
   final String Function(Map album)? subtitle;
 
-  String _defaultSubtitle(Map album) {
-    final String date = DateFormat("y.M.d")
-        .format(DateTime.fromMillisecondsSinceEpoch(album["publishTime"]));
-    return "$date 歌曲 ${album["size"]}";
+  String _defaultSubtitle(ArtistAlum album) {
+    final String date = album.releaseDate;
+    return "$date 歌曲 ";
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final String subtitle = (this.subtitle ?? _defaultSubtitle)(album);
+    final String subtitle =  _defaultSubtitle(album);
     return InkWell(
       onTap: () => ref
           .read(navigatorProvider.notifier)
-          .navigate(NavigationTargetAlbumDetail(album["id"])),
+          .navigate(NavigationTargetAlbumDetail(int.parse(album.albumid))),
       child: SizedBox(
         height: 64,
         child: Row(
@@ -39,7 +39,7 @@ class AlbumTile extends ConsumerWidget {
                 child: AspectRatio(
                   aspectRatio: 1,
                   child: Image(
-                      image: CachedImage(album["picUrl"]), fit: BoxFit.cover),
+                      image: CachedImage(album.pic), fit: BoxFit.cover),
                 ),
               ),
             ),
@@ -49,7 +49,7 @@ class AlbumTile extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 const Spacer(),
-                Text(album["name"], maxLines: 1),
+                Text(album.album, maxLines: 1),
                 const Spacer(),
                 Text(subtitle,
                     maxLines: 1, style: Theme.of(context).textTheme.caption),

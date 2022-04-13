@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quiet/extension.dart';
+import 'package:quiet/navigation/mobile/widgets/track_title.dart';
 import 'package:quiet/providers/album_detail_provider.dart';
 import 'package:quiet/repository.dart';
 
+import '../../../providers/player_provider.dart';
 import '../../common/playlist/music_list.dart';
 import 'page_playlist_detail.dart';
 import 'playlist_flexible_app_bar.dart';
 
 class AlbumDetailPage extends ConsumerWidget {
-  const AlbumDetailPage({Key? key, required this.albumId, this.album})
+  const AlbumDetailPage({Key? key, required this.albumId,})
       : super(key: key);
 
   final int albumId;
-  final Map? album;
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,26 +57,43 @@ class _AlbumBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MusicTileConfiguration(
-        token: 'album_${album.id}',
-        musics: musicList,
-        onMusicTap: MusicTileConfiguration.defaultOnTap,
-        leadingBuilder: MusicTileConfiguration.indexedLeadingBuilder,
-        trailingBuilder: MusicTileConfiguration.defaultTrailingBuilder,
-        child: CustomScrollView(slivers: [
-          SliverAppBar(
-            automaticallyImplyLeading: false,
-            expandedHeight: kHeaderHeight,
-            backgroundColor: Colors.transparent,
-            pinned: true,
-            elevation: 0,
-            flexibleSpace: AlbumFlexibleAppBar(album: album),
-            bottom: MusicListHeader(musicList.length),
-          ),
-          SliverList(
-              delegate: SliverChildBuilderDelegate(
-                  (context, index) => MusicTile(musicList[index]),
-                  childCount: musicList.length)),
-        ]));
+    return _PlayList(
+      MusicTileConfiguration(
+          token: 'album_${album.id}',
+          musics: musicList,
+          onMusicTap: MusicTileConfiguration.defaultOnTap,
+          leadingBuilder: MusicTileConfiguration.indexedLeadingBuilder,
+          trailingBuilder: MusicTileConfiguration.defaultTrailingBuilder,
+          child: CustomScrollView(slivers: [
+            SliverAppBar(
+              automaticallyImplyLeading: false,
+              expandedHeight: kHeaderHeight,
+              backgroundColor: Colors.transparent,
+              pinned: true,
+              elevation: 0,
+              flexibleSpace: AlbumFlexibleAppBar(album: album),
+              bottom: MusicListHeader(musicList.length),
+            ),
+            SliverList(
+                delegate: SliverChildBuilderDelegate(
+                    (context, index) => TrackTile(index: index,track: musicList[index],),
+                    childCount: musicList.length)),
+          ])),musicList
+    );
   }
 }
+class _PlayList extends ConsumerWidget {
+  const _PlayList(this.child, this.tracks) : super();
+  final Widget child;
+  final List<Track> tracks;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return TrackTileContainer.simpleList(
+      player: ref.read(playerProvider),
+      tracks: tracks,
+      child: child,
+    );
+  }
+}
+

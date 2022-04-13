@@ -61,8 +61,8 @@ class SearchPageRoute<T> extends PageRoute<T> {
 }
 
 class SearchPage extends StatefulWidget {
-  const SearchPage({Key? key, required this.animation}) : super(key: key);
-  final Animation<double> animation;
+  const SearchPage({Key? key, this.animation}) : super(key: key);
+  final Animation<double>? animation;
 
   @override
   State<StatefulWidget> createState() {
@@ -92,14 +92,14 @@ class _SearchPageState extends State<SearchPage> {
   void initState() {
     super.initState();
     _queryTextController.addListener(_onQueryTextChanged);
-    widget.animation.addStatusListener(_onAnimationStatusChanged);
+    widget.animation?.addStatusListener(_onAnimationStatusChanged);
     _focusNode.addListener(_onFocusChanged);
   }
 
   @override
   void dispose() {
     _queryTextController.removeListener(_onQueryTextChanged);
-    widget.animation.removeStatusListener(_onAnimationStatusChanged);
+    widget.animation?.removeStatusListener(_onAnimationStatusChanged);
     _focusNode.removeListener(_onFocusChanged);
     super.dispose();
   }
@@ -187,7 +187,7 @@ class _SearchPageState extends State<SearchPage> {
     if (status != AnimationStatus.completed) {
       return;
     }
-    widget.animation.removeStatusListener(_onAnimationStatusChanged);
+    widget.animation?.removeStatusListener(_onAnimationStatusChanged);
     //we need request focus on text field when first in
     FocusScope.of(context).requestFocus(_focusNode);
   }

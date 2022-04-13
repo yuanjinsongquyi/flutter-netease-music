@@ -5,7 +5,7 @@ import 'dart:ui';
 
 import 'package:flutter/widgets.dart';
 import 'package:music_player/music_player.dart';
-
+import 'package:netease_api/src/listen_all/api/kuwo/kuwo.dart';
 import '../../component.dart';
 import '../../repository.dart';
 import 'track_list.dart';
@@ -140,6 +140,7 @@ class TracksPlayerImplMobile extends TracksPlayer {
 
   @override
   Future<void> playFromMediaId(int trackId) async {
+    print('sssssss-----${trackId}');
     await _player.transportControls.playFromMediaId(trackId.toString());
   }
 
@@ -217,20 +218,25 @@ void runMobileBackgroundService() {
 
 // 获取播放地址
 Future<String> _playUriInterceptor(String? mediaId, String? fallbackUri) async {
-  final result = await neteaseRepository!.getPlayUrl(int.parse(mediaId!));
-  if (result.isError) {
-    return fallbackUri ?? '';
+  //final result = await neteaseRepository!.getPlayUrl(int.parse(mediaId!));
+  final value = await KuWo?.playUrl(rid: mediaId);
+  String result = "";
+  Map<String, dynamic>? data = json.decode(json.encode(value.data));
+  if (data != null && data.containsKey("url")) {
+    result = data["url"];
   }
-
+  // if (result.isError) {
+  //   return fallbackUri ?? '';
+  // }
   /// some devices do not support http request.
-  return result.asValue!.value.replaceFirst("http://", "https://");
+  return result.replaceFirst("http://", "https://");
 }
 
 Future<Uint8List> _loadImageInterceptor(MusicMetadata metadata) async {
   final ImageStream stream =
       CachedImage(metadata.iconUri.toString()).resolve(ImageConfiguration(
     size: const Size(150, 150),
-    devicePixelRatio: WidgetsBinding.instance.window.devicePixelRatio,
+    devicePixelRatio: WidgetsBinding.instance?.window.devicePixelRatio,
   ));
   final image = Completer<ImageInfo>();
   stream.addListener(ImageStreamListener((info, a) {

@@ -4,6 +4,7 @@ import 'package:quiet/navigation/mobile/home/main_page_discover.dart';
 import 'package:quiet/navigation/mobile/home/main_page_my.dart';
 import 'package:quiet/navigation/mobile/home/tab_search.dart';
 
+import '../../../pages/search/page_search.dart';
 import '../../../providers/navigator_provider.dart';
 import '../../common/navigation_target.dart';
 import 'tab_discover.dart';
@@ -29,7 +30,7 @@ class PageHome extends StatelessWidget {
         body = MainPageDiscover();
         break;
       case NavigationTargetSearch:
-        body = const HomeTabSearch();
+        body =  const SearchPage();
         break;
       default:
         assert(false, 'unsupported tab: $selectedTab');

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:async/async.dart';
@@ -6,9 +7,12 @@ import 'package:netease_api/netease_api.dart' as api;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:quiet/component/cache/cache.dart';
+import 'package:quiet/model/listen_all/safe_convert.dart';
 import 'package:quiet/repository.dart';
 import 'package:quiet/repository/data/search_result.dart';
-
+import 'package:netease_api/src/listen_all/api/kuwo/kuwo.dart';
+import '../model/listen_all/alum_song_item.dart';
+import '../model/listen_all/extension.dart';
 export 'package:netease_api/netease_api.dart'
     show
         SearchType,
@@ -181,15 +185,29 @@ class NetworkRepository {
       _repository.mvDetail(mvId);
 
   Future<Result<ArtistDetail>> artistDetail(int id) async {
-    final ret = await _repository.artistDetail(id);
-    if (ret.isError) {
-      return ret.asError!;
+    // final ret = await _repository.artistDetail(id);
+    // if (ret.isError) {
+    //   return ret.asError!;
+    // }
+    //final artistDetail = ret.asValue!.value;
+    final value = await KuWo.artistInfo(artistId: id.toString());
+    Map<String, dynamic>? artistDec = json.decode(json.encode(value.data));
+    Map<String, dynamic>? artist;
+    if (artistDec!=null&&artistDec.containsKey("data")){
+      artist = artistDec["data"];
     }
-    final artistDetail = ret.asValue!.value;
+    Artist artistEnd = Artist(name: asString(artist, 'name'), id: asInt(artist, 'id'),publishTime: 0, image1v1Url: asString(artist, 'pic'), picUrl: asString(artist, 'pic'), albumSize: asInt(artist, 'albumNum'), mvSize: asInt(artist, 'mvNum'), musicSize:  asInt(artist, 'musicNum'), followed: false, briefDesc: asString(artist, 'info'), alias: []);
+    final song = await KuWo.artistMusic(artistId: id.toString(),page: 0,size: 100);
+    Map<String, dynamic>? songsArtist = json.decode(json.encode(song.data));
+    Map<String, dynamic>? data;
+    if (songsArtist!=null&&songsArtist.containsKey("data")){
+      data = songsArtist["data"];
+    }
+    List<AlumSongItem> songs = asList(data,'list').map((e) => AlumSongItem.fromJson(e)).toList();
     return Result.value(ArtistDetail(
-      artist: artistDetail.artist.toArtist(),
-      hotSongs: artistDetail.hotSongs.map((e) => e.toTrack(null)).toList(),
-      more: artistDetail.more,
+      artist: artistEnd,
+      hotSongs: songs.map((e) => e.toTrack()).toList(),
+      more: false,
     ));
   }
 
@@ -537,7 +555,7 @@ extension _AlbumMapper on api.Album {
   }
 }
 
-extension _UserMapper on api.Creator {
+extension UserMapper on api.Creator {
   User toUser() {
     return User(
       userId: userId,
