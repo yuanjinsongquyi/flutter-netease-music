@@ -9,7 +9,7 @@ import '../model/listen_all/new_song_list.dart';
 import '../model/listen_all/suggest_alum.dart';
 final homePlaylistProvider = FutureProvider((ref) async {
   //final list = await neteaseRepository!.personalizedPlaylist(limit: 6);
-  final value = await KuWo?.playListRec();
+  final value = await KuWo?.playList();
   final list = SuggestSongList.fromJson(json.decode(json.encode(value.data)));
   return Result.value(
     list.data.map((e) => RecommendedPlaylist(

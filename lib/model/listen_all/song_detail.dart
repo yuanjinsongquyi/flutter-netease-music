@@ -6,6 +6,8 @@ class SongItem {
     this.picUrl = "",
     this.duration = 0,
     this.subTitle = "",
+    this.artist = '',
+    this.album = '',
   });
 
   factory SongItem.fromJson(Map<String, dynamic>? json) {
@@ -18,7 +20,9 @@ class SongItem {
         picUrl: asString(json, 'img'),
         title: asString(json, 'title'),
         duration: asInt(json, 'duration'),
-        subTitle: asString(json, 'subtitle')
+        subTitle: asString(json, 'subtitle'),
+        album: asString(musicdata, 'album'),
+        artist: asString(musicdata, 'artist')
     );
   }
 
@@ -27,6 +31,8 @@ class SongItem {
   final String picUrl;
   final String title;
   final String subTitle;
+  final String artist;
+  final String album;
 
   Map<String, dynamic> toJson() => {
     'id': id,

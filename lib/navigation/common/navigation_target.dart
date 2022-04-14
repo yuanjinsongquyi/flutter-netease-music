@@ -1,8 +1,8 @@
 const kMobileHomeTabs = [
-  NavigationTargetDiscover,
+  //NavigationTargetDiscover,
   NavigationTargetLibrary,
   NavigationTargetMy,
-  NavigationTargetSearch,
+  //NavigationTargetSearch,
 ];
 
 abstract class NavigationTarget {

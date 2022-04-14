@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quiet/extension.dart';
 import 'package:quiet/navigation/common/playlist/music_list.dart';
+import 'package:quiet/navigation/mobile/widgets/track_title.dart';
 import 'package:quiet/repository.dart';
 
 import '../../../providers/navigator_provider.dart';
 import '../../../providers/personalized_playlist_provider.dart';
+import '../../../providers/player_provider.dart';
 import '../../common/navigation_target.dart';
 
 class MainPageDiscover extends StatefulWidget {
@@ -23,7 +25,7 @@ class CloudPageState extends State<MainPageDiscover>
     super.build(context);
     return ListView(
       children: <Widget>[
-        _NavigationLine(),
+        searchBar(),
         _Header("推荐歌单", () {}),
         _SectionPlaylist(),
         _Header("最新音乐", () {}),
@@ -31,6 +33,41 @@ class CloudPageState extends State<MainPageDiscover>
       ],
     );
   }
+}
+
+class searchBar extends ConsumerWidget{
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // TODO: implement build
+    return InkWell(
+      onTap: (){
+        ref.read(navigatorProvider.notifier).navigate(NavigationTargetSearch());
+      },
+      child: Container(
+        height: 40,
+        alignment: Alignment.centerLeft,
+        padding: EdgeInsets.only(left: 20),
+        margin: EdgeInsets.only(left: 40,right: 40,top: 20,bottom: 20),
+        decoration: BoxDecoration(
+          border:Border.all(
+            color: Colors.grey,
+            width: 3
+          ),
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.search,size: 20,),
+            Text(
+              S.of(context).search
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
 }
 
 class _NavigationLine extends ConsumerWidget {
@@ -251,14 +288,18 @@ class _SectionNewSongs extends ConsumerWidget {
     final snapshot = ref.watch(personalizedNewSongProvider.logErrorOnDebug());
     return snapshot.when(
       data: (songs) {
-        return MusicTileConfiguration(
-          musics: songs,
-          token: 'playlist_main_newsong',
-          onMusicTap: MusicTileConfiguration.defaultOnTap,
-          leadingBuilder: MusicTileConfiguration.indexedLeadingBuilder,
-          trailingBuilder: MusicTileConfiguration.defaultTrailingBuilder,
-          child: Column(
-            children: songs.map((m) => MusicTile(m)).toList(),
+        return TrackTileContainer.simpleList(
+          player: ref.read(playerProvider),
+          tracks: songs,
+          child: MusicTileConfiguration(
+            musics: songs,
+            token: 'playlist_main_newsong',
+            onMusicTap: MusicTileConfiguration.defaultOnTap,
+            leadingBuilder: MusicTileConfiguration.indexedLeadingBuilder,
+            trailingBuilder: MusicTileConfiguration.defaultTrailingBuilder,
+            child: Column(
+              children: songs.map((m) => TrackTile(track: m,index: songs.indexOf(m),)).toList(),
+            ),
           ),
         );
       },

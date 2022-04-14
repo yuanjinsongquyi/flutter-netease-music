@@ -27,7 +27,7 @@ Future<Answer> _playListTag(Map params, List<Cookie> cookie) {
 Future<Answer> _playList(Map params, List<Cookie> cookie) {
   var data = {
     "pn": params["page"] ?? 1,
-    "rn": params["size"] ?? 10,
+    "rn": params["size"] ?? 6,
   };
 
   if (params["id"] != null) {

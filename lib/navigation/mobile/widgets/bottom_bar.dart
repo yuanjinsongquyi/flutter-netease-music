@@ -289,28 +289,24 @@ class HomeBottomNavigationBar extends ConsumerWidget {
         final NavigationTarget target;
         switch (index) {
           case 0:
-            target = NavigationTargetDiscover();
-            break;
-          case 1:
             target = NavigationTargetLibrary();
             break;
-          case 2:
+          case 1:
             target = NavigationTargetMy();
+            break;
+          case 2:
+            target = NavigationTargetDiscover();
             break;
           case 3:
             target = NavigationTargetSearch();
             break;
           default:
             assert(false, 'unknown index: $index');
-            target = NavigationTargetDiscover();
+            target = NavigationTargetLibrary();
         }
         ref.read(navigatorProvider.notifier).navigate(target);
       },
       items: [
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.compass_calibration_rounded),
-          label: context.strings.discover,
-        ),
         BottomNavigationBarItem(
           icon: const Icon(Icons.my_library_music),
           label: context.strings.library,
@@ -319,10 +315,14 @@ class HomeBottomNavigationBar extends ConsumerWidget {
           icon: const Icon(Icons.person),
           label: context.strings.my,
         ),
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.search),
-          label: context.strings.search,
-        ),
+        // BottomNavigationBarItem(
+        //   icon: const Icon(Icons.compass_calibration_rounded),
+        //   label: context.strings.discover,
+        // ),
+        // BottomNavigationBarItem(
+        //   icon: const Icon(Icons.search),
+        //   label: context.strings.search,
+        // ),
       ],
     );
   }

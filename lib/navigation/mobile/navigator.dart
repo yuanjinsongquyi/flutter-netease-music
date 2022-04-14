@@ -4,6 +4,7 @@ import 'package:quiet/navigation/mobile/player/page_playing.dart';
 import 'package:quiet/navigation/mobile/settings/page_setting.dart';
 import 'package:quiet/navigation/mobile/widgets/slide_up_page_route.dart';
 
+import '../../pages/search/page_search.dart';
 import '../../providers/navigator_provider.dart';
 import '../common/navigation_target.dart';
 import 'artists/page_artist_detail.dart';
@@ -65,8 +66,10 @@ class MobileNavigatorController extends NavigatorController {
       case NavigationTargetDiscover:
       case NavigationTargetMy:
       case NavigationTargetLibrary:
-      case NavigationTargetSearch:
         page = PageHome(selectedTab: target);
+        break;
+      case NavigationTargetSearch:
+        page = const SearchPage();
         break;
       case NavigationTargetSettings:
         page = PageSettings();

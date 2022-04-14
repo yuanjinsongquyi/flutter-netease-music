@@ -25,7 +25,7 @@ class QuietApp extends ConsumerWidget {
         break;
     }
     return MaterialApp(
-      title: 'Quiet',
+      title: 'ListenAll',
       supportedLocales: const [Locale("en"), Locale("zh")],
       localizationsDelegates: const [
         S.delegate,
@@ -40,9 +40,7 @@ class QuietApp extends ConsumerWidget {
       ),
       home: home,
       debugShowCheckedModeBanner: false,
-      builder: (context, child) {
-        return CopyRightOverlay(child: child);
-      },
+
     );
   }
 }

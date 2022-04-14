@@ -7,8 +7,8 @@ extension SongTrack on SongItem {
   Track toTrack() => Track(
         id: int.parse(id),
         imageUrl: picUrl,
-        artists: [],
-        album: null,
+        artists: [ArtistMini(id: 0, name: artist, imageUrl: '')],
+        album: AlbumMini(name: album, picUri: '', id: 0,),
         uri: "",
         type: TrackType.free,
         duration: Duration(seconds: duration),
@@ -19,7 +19,7 @@ extension AlumSongTrack on AlumSongItem {
   Track toTrack() => Track(
     id: int.parse(id),
     imageUrl: picUrl,
-    artists: [],
+    artists: [ArtistMini(id: int.parse(artistid), name: artist, imageUrl: '')],
     album: AlbumMini(picUri: albumpic, name: album, id: int.parse(albumid),),
     uri: "",
     type: TrackType.free,

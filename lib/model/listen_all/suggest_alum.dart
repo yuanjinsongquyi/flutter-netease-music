@@ -14,7 +14,7 @@ class SuggestSongList {
     }
     return SuggestSongList(
       code: asInt(json, 'code'),
-      data: asList(list, 'list')
+      data: asList(list, 'data')
           .map((e) => AlumItem.fromJson(e))
           .toList(),
     );
