@@ -1,7 +1,14 @@
+import 'dart:convert';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quiet/repository.dart';
 import 'package:quiet/repository/data/search_result.dart';
+import '../../model/listen_all/extension.dart';
+import 'package:netease_api/src/listen_all/api/kuwo/kuwo.dart';
+import '../../model/listen_all/search_songs.dart';
+import '../../navigation/mobile/widgets/track_title.dart';
+import '../../providers/player_provider.dart';
 
 final searchMusicProvider = StateNotifierProvider.family<
     SearchResultStateNotify<Track>, SearchResultState<Track>, String>(
@@ -84,8 +91,19 @@ class _TrackResultStateNotify extends SearchResultStateNotify<Track> {
   _TrackResultStateNotify(String query) : super(query);
 
   @override
-  Future<SearchResult<List<Track>>> load(int offset, int count) =>
-      neteaseRepository!.searchMusics(query, offset: offset, limit: count);
+  Future<SearchResult<List<Track>>> load(int offset, int count) async {
+    final value = await KuWo.searchMusic(
+        keyWord: query, page: offset, size: count);
+    SearchSongs songs =
+    SearchSongs.fromJson(json.decode(json.encode(value.data)));
+    List<Track> temp = songs.list.map((e) => e.toTrack()).toList();
+    SearchResult<List<Track>> data = SearchResult<List<Track>>(
+      result: temp,
+      hasMore: offset<= (int.parse(songs.total)/count),
+      totalCount: int.parse(songs.total),
+    );
+    return Future.value(data);
+  }
 
   @override
   int get pageSize => 100;

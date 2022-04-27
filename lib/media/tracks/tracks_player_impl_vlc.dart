@@ -1,10 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dart_vlc/dart_vlc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:quiet/extension.dart';
 import 'package:quiet/repository.dart';
-
+import 'package:netease_api/src/listen_all/api/kuwo/kuwo.dart';
 import 'track_list.dart';
 import 'tracks_player.dart';
 
@@ -182,16 +183,22 @@ class TracksPlayerImplVlc extends TracksPlayer {
 
   void _playTrack(Track track) {
     scheduleMicrotask(() async {
-      final url = await neteaseRepository!.getPlayUrl(track.id);
-      if (url.isError) {
-        debugPrint('Failed to get play url: ${url.asError!.error}');
-        return;
+      // final url = await neteaseRepository!.getPlayUrl(track.id);
+      // if (url.isError) {
+      //   debugPrint('Failed to get play url: ${url.asError!.error}');
+      //   return;
+      // }
+      final value = await KuWo?.playUrl(rid: track.id.toString());
+      String result = "";
+      Map<String, dynamic>? data = json.decode(json.encode(value.data));
+      if (data != null && data.containsKey("url")) {
+        result = data["url"];
       }
       if (_current != track) {
         // skip play. since the track is changed.
         return;
       }
-      _player.open(Media.network(url.asValue!.value), autoStart: true);
+      _player.open(Media.network(result), autoStart: true);
     });
     _current = track;
     notifyPlayStateChanged();

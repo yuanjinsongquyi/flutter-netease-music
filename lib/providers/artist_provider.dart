@@ -3,7 +3,7 @@ import 'package:quiet/repository.dart';
 
 final artistProvider = FutureProvider.family<ArtistDetail, int>(
   (ref, albumId) async {
-    final result = await neteaseRepository!.artist(albumId);
+    final result = await neteaseRepository!.artistDetail(albumId);
     final album = await result.asFuture;
     return album;
   },

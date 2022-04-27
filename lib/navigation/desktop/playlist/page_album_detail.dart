@@ -26,7 +26,7 @@ class PageAlbumDetail extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final snapshot = ref.watch(albumDetailProvider(albumId).logErrorOnDebug());
+    final snapshot = ref.watch(albumDetailProvider(albumId));
     return Material(
       color: context.colorScheme.background,
       child: snapshot.when(
